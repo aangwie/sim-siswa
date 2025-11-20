@@ -248,7 +248,10 @@ $info = $conn->query("SELECT * FROM identitas_sekolah WHERE id=1")->fetch_assoc(
                     </div>
 
                     <div class="card-footer bg-light text-center py-3">
-                        <small class="text-muted">Data ini dihasilkan oleh sistem pada <?= date('d-m-Y H:i') ?> WIB</small>
+                        <small class="text-muted d-block mb-2">Data ini dihasilkan oleh sistem pada <?= date('d-m-Y H:i') ?> WIB</small>
+                        <a href="cetak_kartu.php?nisn=<?= $data['nisn'] ?>" target="_blank" class="btn btn-primary btn-sm rounded-pill px-4">
+                            <i class="bi bi-printer-fill me-2"></i>Cetak Kartu NISN
+                        </a>
                     </div>
                 </div>
 
