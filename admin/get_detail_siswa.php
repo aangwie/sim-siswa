@@ -4,77 +4,102 @@ require '../config.php';
 if (isset($_POST['id'])) {
     $id = clean($_POST['id']);
 
-    // ... Query sama ...
+    // 1. Ambil Data Profil (Query Lama)
     $query = "SELECT * FROM siswa_pribadi 
               LEFT JOIN siswa_alamat ON siswa_pribadi.siswa_id = siswa_alamat.siswa_id 
               LEFT JOIN siswa_ortu ON siswa_pribadi.siswa_id = siswa_ortu.siswa_id 
               WHERE siswa_pribadi.siswa_id = ?";
-
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $id);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $data = $result->fetch_assoc();
+    $data = $stmt->get_result()->fetch_assoc();
 
+    // 2. Ambil Riwayat BK (Query Baru)
+    $query_bk = "SELECT * FROM bk_kasus WHERE siswa_id = ? ORDER BY tanggal DESC";
+    $stmt_bk = $conn->prepare($query_bk);
+    $stmt_bk->bind_param("i", $id);
+    $stmt_bk->execute();
+    $res_bk = $stmt_bk->get_result();
+
+    // --- RENDER TAMPILAN ---
     if ($data) {
         $tgl_lahir = date("d F Y", strtotime($data['tanggal_lahir']));
-        $gender = ($data['jenis_kelamin'] == 'L') ? 'Laki-laki' : 'Perempuan';
         $status_badge = ($data['status'] == 'Aktif') ? 'bg-success' : 'bg-danger';
-          // Ambil Tempat Lahir (Handle jika kosong)
-        $tempat = !empty($data['tempat_lahir']) ? $data['tempat_lahir'] : '-';
-
-        $formatter = new IntlDateFormatter(
-            'id_ID',
-            IntlDateFormatter::FULL,
-            IntlDateFormatter::NONE,
-            'Asia/Jakarta',
-            IntlDateFormatter::GREGORIAN,
-            'd MMMM y' // Pola format: d=hari, MMMM=bulan lengkap, y=tahun
-        );
-
-        $tgl_konversi = new DateTime($tgl_lahir);
-        $tgl_lahir_id = $formatter->format($tgl_konversi);
-      
 
         echo '
         <div class="text-center mb-4">
-            <div class="avatar-placeholder mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem; background-color: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                ' . strtoupper(substr($data['nama_lengkap'], 0, 1)) . '
+            <div class="avatar-placeholder mx-auto mb-3" style="width: 70px; height: 70px; font-size: 1.5rem; background-color: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                '.strtoupper(substr($data['nama_lengkap'], 0, 1)).'
             </div>
-            <h4 class="fw-bold">' . $data['nama_lengkap'] . '</h4>
-            <p class="text-muted mb-1">NISN: ' . $data['nisn'] . ' | Kelas: <span class="badge bg-primary">' . $data['kelas'] . '</span></p>
-            <span class="badge ' . $status_badge . ' rounded-pill">' . $data['status'] . '</span>
+            <h4 class="fw-bold mb-0">'.$data['nama_lengkap'].'</h4>
+            <p class="text-muted small">'.$data['kelas'].' | '.$data['nisn'].'</p>
         </div>
 
-        <div class="row g-3">
-            <div class="col-md-4 border-end">
-                <h6 class="text-primary fw-bold border-bottom pb-2"><i class="bi bi-person-fill me-1"></i> Data Pribadi</h6>
-                <ul class="list-unstyled small">
-                    <li class="mb-2"><strong>NIK:</strong><br> ' . $data['nik'] . '</li>
-                    <li class="mb-2"><strong>Jenis Kelamin:</strong><br> ' . $gender . '</li>
-                    <li class="mb-2"><strong>Tempat, Tgl Lahir:</strong><br> ' . $tempat . ', ' . $tgl_lahir_id . '</li>
-                </ul>
+        <!-- TAB NAVIGASI -->
+        <ul class="nav nav-tabs mb-3" id="detailTab" role="tablist">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profil" type="button">Profil Siswa</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#bk" type="button">Riwayat BK & Poin</button></li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- TAB 1: PROFIL (Isi lama) -->
+            <div class="tab-pane fade show active" id="profil">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">Data Pribadi</h6>
+                        <ul class="list-unstyled small">
+                            <li><strong>NIK:</strong> '.$data['nik'].'</li>
+                            <li><strong>TTL:</strong> '.$data['tempat_lahir'].', '.$tgl_lahir.'</li>
+                            <li><strong>Alamat:</strong> '.$data['alamat_jalan'].', '.$data['desa_kelurahan'].'</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">Orang Tua</h6>
+                        <ul class="list-unstyled small">
+                            <li><strong>Ayah:</strong> '.$data['nama_ayah'].' ('.$data['pekerjaan_ayah'].')</li>
+                            <li><strong>Ibu:</strong> '.$data['nama_ibu'].'</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
 
-            <div class="col-md-4 border-end">
-                <h6 class="text-primary fw-bold border-bottom pb-2"><i class="bi bi-geo-alt-fill me-1"></i> Alamat</h6>
-                <ul class="list-unstyled small">
-                    <li class="mb-2"><strong>Jalan:</strong><br> ' . $data['alamat_jalan'] . '</li>
-                    <li class="mb-2"><strong>Desa/Kel:</strong><br> ' . $data['desa_kelurahan'] . '</li>
-                    <li class="mb-2"><strong>Kecamatan:</strong><br> ' . $data['kecamatan'] . '</li>
-                    <li class="mb-2"><strong>Kota/Kab:</strong><br> ' . $data['kota_kabupaten'] . '</li>
-                </ul>
-            </div>
-            <div class="col-md-4">
-                <h6 class="text-primary fw-bold border-bottom pb-2"><i class="bi bi-people-fill me-1"></i> Orang Tua</h6>
-                <ul class="list-unstyled small">
-                    <li class="mb-2"><strong>Ayah:</strong><br> ' . $data['nama_ayah'] . '</li>
-                    <li class="mb-2"><strong>Pekerjaan Ayah:</strong><br> ' . $data['pekerjaan_ayah'] . '</li>
-                    <li class="mb-2"><strong>Ibu:</strong><br> ' . $data['nama_ibu'] . '</li>
-                </ul>
+            <!-- TAB 2: RIWAYAT BK (Fitur Baru) -->
+            <div class="tab-pane fade" id="bk">
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered small mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tgl</th>
+                                <th>Kategori</th>
+                                <th>Kasus</th>
+                                <th>Poin</th>
+                            </tr>
+                        </thead>
+                        <tbody>';
+                        
+                        if($res_bk->num_rows > 0){
+                            $total_poin = 0;
+                            while($bk = $res_bk->fetch_assoc()){
+                                $total_poin += $bk['poin'];
+                                echo "<tr>
+                                    <td>".date('d/m/y', strtotime($bk['tanggal']))."</td>
+                                    <td>{$bk['kategori']}</td>
+                                    <td>{$bk['judul_kasus']}</td>
+                                    <td class='text-center text-danger'>".($bk['poin'] > 0 ? '-'.$bk['poin'] : '-')."</td>
+                                </tr>";
+                            }
+                            echo "<tr><td colspan='3' class='text-end fw-bold'>Total Poin Pelanggaran</td><td class='text-center fw-bold text-danger'>-$total_poin</td></tr>";
+                        } else {
+                            echo "<tr><td colspan='4' class='text-center text-muted'>Belum ada catatan BK.</td></tr>";
+                        }
+
+        echo '          </tbody>
+                    </table>
+                </div>
             </div>
         </div>';
     } else {
         echo '<div class="alert alert-danger">Data tidak ditemukan.</div>';
     }
 }
+?>

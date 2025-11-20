@@ -140,6 +140,19 @@ $result = $conn->query($query);
                             <i class="bi bi-gear-fill"></i> <span class="d-lg-none">Pengaturan</span>
                         </a>
                     </li>
+                    <li class="nav-item dropdown me-3">
+                        <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-heart me-1"></i> Bimbingan Konseling
+                        </a>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item" href="bk_kasus.php"><i class="bi bi-journal-text me-2"></i>Catatan Kasus</a></li>
+                            <li><a class="dropdown-item" href="bk_jadwal.php"><i class="bi bi-calendar-event me-2"></i>Jadwal Konseling</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="javascript:window.print()"><i class="bi bi-printer me-2"></i>Cetak Laporan</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item me-3">
                         <span class="text-white-50 small">| Admin Panel</span>
                     </li>
@@ -250,7 +263,7 @@ $result = $conn->query($query);
             <div class="card-footer bg-white border-0 py-3" id="pagination-container">
                 <nav aria-label="Page navigation">
                     <ul class="pagination justify-content-center mb-0">
-                        
+
                         <?php if ($halaman_aktif > 1): ?>
                             <li class="page-item">
                                 <a class="page-link border-0 text-dark" href="?halaman=<?= $halaman_aktif - 1 ?>&limit=<?= $jumlah_data_per_halaman ?>">&laquo;</a>
@@ -283,20 +296,20 @@ $result = $conn->query($query);
                         // 5. Loop untuk menampilkan (DEFINISI $i ADA DI SINI)
                         $prev_page = 0;
                         foreach ($pages_to_show as $i): // <--- Variabel $i didefinisikan di sini
-                            
+
                             // Jika ada celah, tampilkan "..."
-                            if ($prev_page > 0 && $i > ($prev_page + 1)): 
+                            if ($prev_page > 0 && $i > ($prev_page + 1)):
                         ?>
                                 <li class="page-item disabled">
                                     <span class="page-link border-0 text-muted bg-transparent">...</span>
                                 </li>
-                        <?php 
+                            <?php
                             endif;
-                            
+
                             // Tentukan Class Aktif
                             $active_class = ($i == $halaman_aktif) ? 'bg-primary text-white' : 'text-dark';
                             $is_active = ($i == $halaman_aktif) ? 'active' : '';
-                        ?>
+                            ?>
                             <li class="page-item <?= $is_active ?>">
                                 <a class="page-link border-0 rounded-circle <?= $active_class ?> mx-1" href="?halaman=<?= $i; ?>&limit=<?= $jumlah_data_per_halaman ?>">
                                     <?= $i; ?>
