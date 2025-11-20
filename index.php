@@ -164,13 +164,24 @@ $info = $conn->query("SELECT * FROM identitas_sekolah WHERE id=1")->fetch_assoc(
 
             if ($result->num_rows > 0) {
                 $data = $result->fetch_assoc();
+                $formatter = new IntlDateFormatter(
+                    'id_ID',
+                    IntlDateFormatter::FULL,
+                    IntlDateFormatter::NONE,
+                    'Asia/Jakarta',
+                    IntlDateFormatter::GREGORIAN,
+                    'd MMMM y' // Pola format: d=hari, MMMM=bulan lengkap, y=tahun
+                );
 
                 // Format Tanggal Indonesia
                 $tgl_lahir = date("d F Y", strtotime($data['tanggal_lahir']));
+                $tgl_konversi = new DateTime($tgl_lahir);
+                $tgl_lahir_id = $formatter->format($tgl_konversi);
                 $gender = ($data['jenis_kelamin'] == 'L') ? 'Laki-laki' : 'Perempuan';
 
                 // Badge Status
                 $badge_class = ($data['status'] == 'Aktif') ? 'bg-success' : 'bg-danger';
+
         ?>
 
                 <div class="card result-card shadow-lg mb-5">
@@ -203,7 +214,7 @@ $info = $conn->query("SELECT * FROM identitas_sekolah WHERE id=1")->fetch_assoc(
                                 </div>
                                 <div class="mb-3">
                                     <div class="data-label">Tanggal Lahir</div>
-                                    <div class="data-value"><?= $tgl_lahir ?></div>
+                                    <div class="data-value"><?= $tgl_lahir_id ?></div>
                                 </div>
                             </div>
 

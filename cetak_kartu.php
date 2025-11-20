@@ -17,9 +17,20 @@ if (!$data) {
     die("Data siswa tidak ditemukan.");
 }
 
+$formatter = new IntlDateFormatter(
+    'id_ID', 
+    IntlDateFormatter::FULL, 
+    IntlDateFormatter::NONE, 
+    'Asia/Jakarta', 
+    IntlDateFormatter::GREGORIAN, 
+    'd MMMM y' // Pola format: d=hari, MMMM=bulan lengkap, y=tahun
+);
+
 // Format Data
 $tempat_lahir = ucwords(strtolower($data['tempat_lahir']));
-$tgl_lahir = date("d F Y", strtotime($data['tanggal_lahir']));
+$tgl = date("d F Y", strtotime($data['tanggal_lahir']));
+$tgl_ori = new DateTime($tgl);
+$tgl_lahir = $formatter->format($tgl_ori);
 $gender = ($data['jenis_kelamin'] == 'L') ? 'Laki-laki' : 'Perempuan';
 $qrData = "NISN: " . $data['nisn'] . " - " . $data['nama_lengkap'];
 $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($qrData);

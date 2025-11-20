@@ -20,9 +20,21 @@ if (isset($_POST['id'])) {
         $tgl_lahir = date("d F Y", strtotime($data['tanggal_lahir']));
         $gender = ($data['jenis_kelamin'] == 'L') ? 'Laki-laki' : 'Perempuan';
         $status_badge = ($data['status'] == 'Aktif') ? 'bg-success' : 'bg-danger';
-
-        // Ambil Tempat Lahir (Handle jika kosong)
+          // Ambil Tempat Lahir (Handle jika kosong)
         $tempat = !empty($data['tempat_lahir']) ? $data['tempat_lahir'] : '-';
+
+        $formatter = new IntlDateFormatter(
+            'id_ID',
+            IntlDateFormatter::FULL,
+            IntlDateFormatter::NONE,
+            'Asia/Jakarta',
+            IntlDateFormatter::GREGORIAN,
+            'd MMMM y' // Pola format: d=hari, MMMM=bulan lengkap, y=tahun
+        );
+
+        $tgl_konversi = new DateTime($tgl_lahir);
+        $tgl_lahir_id = $formatter->format($tgl_konversi);
+      
 
         echo '
         <div class="text-center mb-4">
@@ -40,7 +52,7 @@ if (isset($_POST['id'])) {
                 <ul class="list-unstyled small">
                     <li class="mb-2"><strong>NIK:</strong><br> ' . $data['nik'] . '</li>
                     <li class="mb-2"><strong>Jenis Kelamin:</strong><br> ' . $gender . '</li>
-                    <li class="mb-2"><strong>Tempat, Tgl Lahir:</strong><br> ' . $tempat . ', ' . $tgl_lahir . '</li>
+                    <li class="mb-2"><strong>Tempat, Tgl Lahir:</strong><br> ' . $tempat . ', ' . $tgl_lahir_id . '</li>
                 </ul>
             </div>
 
