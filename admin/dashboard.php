@@ -247,6 +247,9 @@ $result = $conn->query($query);
                                             data-id="<?= $row['siswa_id'] ?>" title="Lihat Detail">
                                             <i class="bi bi-eye-fill"></i>
                                         </button>
+                                        <a href="../cetak_kartu.php?nisn=<?= $row['nisn'] ?>" target="_blank" class="btn btn-sm btn-light text-dark border me-1" title="Cetak Kartu">
+                                            <i class="bi bi-printer-fill"></i>
+                                        </a>
                                         <a href="edit.php?id=<?= $row['siswa_id'] ?>" class="btn btn-sm btn-light text-primary border" title="Edit">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>

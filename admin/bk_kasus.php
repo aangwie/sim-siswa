@@ -51,7 +51,7 @@ if (isset($_GET['hapus'])) {
     header("Location: bk_kasus.php?msg=deleted"); exit;
 }
 
-// --- FETCH DATA (Tanpa LIMIT PHP, DataTables yang atur) ---
+// --- FETCH DATA ---
 $query = "SELECT k.*, s.nama_lengkap, s.kelas, s.nisn 
           FROM bk_kasus k 
           JOIN siswa_pribadi s ON k.siswa_id = s.siswa_id 
@@ -69,7 +69,6 @@ $result = $conn->query($query);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
 
@@ -78,8 +77,6 @@ $result = $conn->query($query);
         .badge-pelanggaran { background-color: #ef4444; }
         .badge-prestasi { background-color: #22c55e; }
         .badge-masalah { background-color: #f59e0b; }
-        
-        /* Custom Style DataTables agar lebih rapi */
         .dataTables_wrapper .dataTables_length select { padding-right: 30px; }
         table.dataTable thead th { background-color: #f1f5f9; color: #334155; font-weight: 600; }
     </style>
@@ -93,7 +90,6 @@ $result = $conn->query($query);
     </nav>
 
     <div class="container mb-5">
-        
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="text-dark">Riwayat Kasus</h4>
             <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalTambahKasus">
@@ -102,7 +98,8 @@ $result = $conn->query($query);
         </div>
 
         <div class="card border-0 shadow-sm">
-            <div class="card-body p-4"> <table id="tabelKasus" class="table table-hover align-middle w-100">
+            <div class="card-body p-4">
+                <table id="tabelKasus" class="table table-hover align-middle w-100">
                     <thead>
                         <tr>
                             <th class="ps-3">Tanggal Kejadian</th>
@@ -110,7 +107,7 @@ $result = $conn->query($query);
                             <th>Kategori</th>
                             <th>Judul & Deskripsi</th>
                             <th>Poin</th>
-                            <th class="text-end pe-3">Aksi</th>
+                            <th class="text-end pe-3" style="width: 120px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -121,7 +118,8 @@ $result = $conn->query($query);
                             if($row['kategori'] == 'Masalah Pribadi') $badge = 'badge-masalah';
                         ?>
                         <tr>
-                            <td class="ps-3" data-order="<?= strtotime($row['tanggal']) ?>"> <div class="fw-bold text-dark"><?= date('d/m/Y', strtotime($row['tanggal'])) ?></div>
+                            <td class="ps-3" data-order="<?= strtotime($row['tanggal']) ?>">
+                                <div class="fw-bold text-dark"><?= date('d/m/Y', strtotime($row['tanggal'])) ?></div>
                                 <?php if(!empty($row['updated_at'])): ?>
                                     <div class="text-muted fst-italic" style="font-size: 10px;">
                                         <i class="bi bi-pencil-fill" style="font-size: 9px;"></i> Edit: <?= date('d/m/y H:i', strtotime($row['updated_at'])) ?>
@@ -135,10 +133,22 @@ $result = $conn->query($query);
                             <td><span class="badge <?= $badge ?>"><?= $row['kategori'] ?></span></td>
                             <td>
                                 <strong><?= $row['judul_kasus'] ?></strong><br>
-                                <small class="text-muted d-inline-block text-truncate" style="max-width: 250px;"><?= $row['deskripsi'] ?></small>
+                                <small class="text-muted d-inline-block text-truncate" style="max-width: 200px;"><?= $row['deskripsi'] ?></small>
                             </td>
                             <td class="fw-bold text-danger"><?= $row['poin'] > 0 ? '-'.$row['poin'] : '0' ?></td>
                             <td class="text-end pe-3">
+                                <button type="button" class="btn btn-sm btn-light text-info border me-1 btn-detail"
+                                        data-tanggal="<?= date('d F Y', strtotime($row['tanggal'])) ?>"
+                                        data-siswa="<?= $row['nama_lengkap'] ?> (<?= $row['kelas'] ?>)"
+                                        data-kategori="<?= $row['kategori'] ?>"
+                                        data-poin="<?= $row['poin'] ?>"
+                                        data-judul="<?= htmlspecialchars($row['judul_kasus']) ?>"
+                                        data-deskripsi="<?= htmlspecialchars($row['deskripsi']) ?>"
+                                        data-penanganan="<?= htmlspecialchars($row['penanganan']) ?>"
+                                        title="Lihat Detail">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+
                                 <button type="button" class="btn btn-sm btn-light text-primary border me-1 btn-edit"
                                         data-id="<?= $row['kasus_id'] ?>"
                                         data-siswa="<?= $row['siswa_id'] ?>"
@@ -151,6 +161,7 @@ $result = $conn->query($query);
                                         title="Edit">
                                     <i class="bi bi-pencil-square"></i>
                                 </button>
+
                                 <a href="?hapus=<?= $row['kasus_id'] ?>" class="btn btn-sm btn-light text-danger border btn-hapus" title="Hapus">
                                     <i class="bi bi-trash"></i>
                                 </a>
@@ -159,7 +170,6 @@ $result = $conn->query($query);
                         <?php endwhile; ?>
                     </tbody>
                 </table>
-
             </div>
         </div>
     </div>
@@ -215,7 +225,7 @@ $result = $conn->query($query);
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Penanganan / Tindak Lanjut</label>
-                                <textarea name="penanganan" class="form-control" rows="2" placeholder="Cth: Diberikan teguran lisan, Pemanggilan Ortu..."></textarea>
+                                <textarea name="penanganan" class="form-control" rows="2"></textarea>
                             </div>
                         </div>
                     </div>
@@ -286,54 +296,79 @@ $result = $conn->query($query);
         </div>
     </div>
 
+    <div class="modal fade" id="modalDetailKasus" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="bi bi-info-circle-fill me-2"></i>Detail Kasus</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="fw-bold text-muted" width="35%">Siswa</td>
+                            <td id="det_siswa"></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-muted">Tanggal</td>
+                            <td id="det_tanggal"></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-muted">Kategori</td>
+                            <td id="det_kategori"></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-muted">Judul Kasus</td>
+                            <td id="det_judul" class="fw-bold"></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-muted">Poin</td>
+                            <td id="det_poin" class="text-danger fw-bold"></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-muted">Deskripsi</td>
+                            <td id="det_deskripsi" class="text-break bg-light p-2 rounded"></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-muted">Penanganan</td>
+                            <td id="det_penanganan" class="text-break bg-light p-2 rounded"></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
 
     <script>
-        // 1. INISIALISASI DATATABLES
+        // 1. DATATABLES
         $(document).ready(function() {
             $('#tabelKasus').DataTable({
                 responsive: true,
-                language: {
-                    search: "Cari Kasus:",
-                    lengthMenu: "Tampilkan _MENU_ data",
-                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                    infoEmpty: "Tidak ada data",
-                    infoFiltered: "(difilter dari _MAX_ total data)",
-                    paginate: {
-                        first: "Awal",
-                        last: "Akhir",
-                        next: "&raquo;",
-                        previous: "&laquo;"
-                    }
-                },
-                pageLength: 10, // Default baris
-                lengthMenu: [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"] ], // Pilihan baris
-                columnDefs: [
-                    { orderable: false, targets: 5 } // Non-aktifkan sorting di kolom Aksi
-                ],
-                order: [[ 0, 'desc' ]] // Urutkan berdasarkan Tanggal (Kolom 0) descending
+                language: { search: "Cari Kasus:", lengthMenu: "Tampilkan _MENU_ data", info: "Menampilkan _START_-_END_ dari _TOTAL_", paginate: { next: ">>", previous: "<<" } },
+                columnDefs: [{ orderable: false, targets: 5 }], order: [[ 0, 'desc' ]]
             });
         });
 
-        // 2. HANDLER NOTIFIKASI (SAMA SEPERTI SEBELUMNYA)
+        // 2. HANDLER NOTIFIKASI
         const urlParams = new URLSearchParams(window.location.search);
         const msg = urlParams.get('msg');
         if (msg) {
-            const Toast = Swal.mixin({
-                toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true
-            });
-            let title = 'Aksi berhasil!';
-            let icon = 'success';
-            if (msg === 'added') title = 'Data kasus berhasil ditambahkan!';
-            if (msg === 'updated') title = 'Data kasus berhasil diperbarui!';
-            if (msg === 'deleted') { title = 'Data kasus telah dihapus!'; icon = 'warning'; }
-            Toast.fire({ icon: icon, title: title });
+            const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+            let t = 'Aksi berhasil!', i = 'success';
+            if (msg === 'added') t = 'Data ditambahkan!';
+            if (msg === 'updated') t = 'Data diperbarui!';
+            if (msg === 'deleted') { t = 'Data dihapus!'; i = 'warning'; }
+            Toast.fire({ icon: i, title: t });
             window.history.replaceState(null, null, window.location.pathname);
         }
 
@@ -342,36 +377,33 @@ $result = $conn->query($query);
             e.preventDefault();
             const href = $(this).attr('href');
             Swal.fire({
-                title: 'Hapus Data?', text: "Data tidak bisa dikembalikan!", icon: 'warning',
-                showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus!', cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) window.location.href = href;
-            });
+                title: 'Hapus Data?', text: "Data hilang permanen!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Ya, Hapus!'
+            }).then((result) => { if (result.isConfirmed) window.location.href = href; });
         });
 
         // 4. HANDLER EDIT
         $(document).on('click', '.btn-edit', function() {
-            const id = $(this).data('id');
-            const siswa = $(this).data('siswa');
-            const tanggal = $(this).data('tanggal');
-            const kategori = $(this).data('kategori');
-            const poin = $(this).data('poin');
-            const judul = $(this).data('judul');
-            const deskripsi = $(this).data('deskripsi');
-            const penanganan = $(this).data('penanganan');
+            $('#edit_kasus_id').val($(this).data('id'));
+            $('#edit_siswa_id').val($(this).data('siswa'));
+            $('#edit_tanggal').val($(this).data('tanggal'));
+            $('#edit_kategori').val($(this).data('kategori'));
+            $('#edit_poin').val($(this).data('poin'));
+            $('#edit_judul').val($(this).data('judul'));
+            $('#edit_deskripsi').val($(this).data('deskripsi'));
+            $('#edit_penanganan').val($(this).data('penanganan'));
+            new bootstrap.Modal(document.getElementById('modalEditKasus')).show();
+        });
 
-            $('#edit_kasus_id').val(id);
-            $('#edit_siswa_id').val(siswa);
-            $('#edit_tanggal').val(tanggal);
-            $('#edit_kategori').val(kategori);
-            $('#edit_poin').val(poin);
-            $('#edit_judul').val(judul);
-            $('#edit_deskripsi').val(deskripsi);
-            $('#edit_penanganan').val(penanganan);
-
-            const modalEdit = new bootstrap.Modal(document.getElementById('modalEditKasus'));
-            modalEdit.show();
+        // 5. HANDLER DETAIL (BARU)
+        $(document).on('click', '.btn-detail', function() {
+            $('#det_siswa').text($(this).data('siswa'));
+            $('#det_tanggal').text($(this).data('tanggal'));
+            $('#det_kategori').text($(this).data('kategori'));
+            $('#det_judul').text($(this).data('judul'));
+            $('#det_poin').text($(this).data('poin') > 0 ? '-' + $(this).data('poin') : '0');
+            $('#det_deskripsi').text($(this).data('deskripsi'));
+            $('#det_penanganan').text($(this).data('penanganan') || '-');
+            new bootstrap.Modal(document.getElementById('modalDetailKasus')).show();
         });
     </script>
 </body>

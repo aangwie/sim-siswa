@@ -1,5 +1,7 @@
-<?php require 'config.php';
-// Ambil Data Sekolah
+<?php
+require 'config.php';
+
+// Ambil Data Identitas Sekolah
 $info = $conn->query("SELECT * FROM identitas_sekolah WHERE id=1")->fetch_assoc();
 ?>
 <!DOCTYPE html>
@@ -29,7 +31,6 @@ $info = $conn->query("SELECT * FROM identitas_sekolah WHERE id=1")->fetch_assoc(
         .search-box {
             background: white;
             border-radius: 50px;
-            /* Rounded pill shape */
             padding: 5px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
         }
@@ -106,6 +107,20 @@ $info = $conn->query("SELECT * FROM identitas_sekolah WHERE id=1")->fetch_assoc(
             margin-bottom: 10px;
         }
 
+        /* Tab Styling */
+        .nav-tabs .nav-link {
+            color: #64748b;
+            font-weight: 600;
+            border: none;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--accent-color);
+            background: transparent;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -151,7 +166,7 @@ $info = $conn->query("SELECT * FROM identitas_sekolah WHERE id=1")->fetch_assoc(
         if (isset($_GET['keyword'])) {
             $keyword = clean($_GET['keyword']);
 
-            // Query JOIN 3 Tabel
+            // Query Data Siswa
             $query = "SELECT * FROM siswa_pribadi 
                   LEFT JOIN siswa_alamat ON siswa_pribadi.siswa_id = siswa_alamat.siswa_id
                   LEFT JOIN siswa_ortu ON siswa_pribadi.siswa_id = siswa_ortu.siswa_id
@@ -172,97 +187,164 @@ $info = $conn->query("SELECT * FROM identitas_sekolah WHERE id=1")->fetch_assoc(
                     IntlDateFormatter::GREGORIAN,
                     'd MMMM y' // Pola format: d=hari, MMMM=bulan lengkap, y=tahun
                 );
-
                 // Format Tanggal Indonesia
                 $tgl_lahir = date("d F Y", strtotime($data['tanggal_lahir']));
                 $tgl_konversi = new DateTime($tgl_lahir);
                 $tgl_lahir_id = $formatter->format($tgl_konversi);
                 $gender = ($data['jenis_kelamin'] == 'L') ? 'Laki-laki' : 'Perempuan';
-
-                // Badge Status
                 $badge_class = ($data['status'] == 'Aktif') ? 'bg-success' : 'bg-danger';
 
+                // Query Data BK (Kasus/Prestasi)
+                $siswa_id = $data['siswa_id'];
+                $query_bk = "SELECT * FROM bk_kasus WHERE siswa_id = '$siswa_id' ORDER BY tanggal DESC";
+                $result_bk = $conn->query($query_bk);
+
+                // Hitung Poin
+                $total_poin = 0;
         ?>
 
                 <div class="card result-card shadow-lg mb-5">
                     <div class="result-header d-flex justify-content-between align-items-center">
                         <div>
                             <h3 class="mb-0 fw-bold"><?= $data['nama_lengkap'] ?></h3>
-                            <small class="opacity-75">NISN: <?= $data['nisn'] ?></small>
+                            <small class="opacity-75">NISN: <?= $data['nisn'] ?> | Kelas: <?= $data['kelas'] ?></small>
                         </div>
-                        <span class="badge <?= $badge_class ?> px-3 py-2 rounded-pill">
-                            <i class="bi bi-check-circle-fill me-1"></i> <?= $data['status'] ?>
-                        </span>
+                        <div>
+                            <a href="cetak_kartu.php?nisn=<?= $data['nisn'] ?>" target="_blank" class="btn btn-light btn-sm fw-bold text-primary me-2">
+                                <i class="bi bi-printer-fill"></i> Cetak Kartu
+                            </a>
+                            <span class="badge <?= $badge_class ?> px-3 py-2 rounded-pill">
+                                <i class="bi bi-check-circle-fill me-1"></i> <?= $data['status'] ?>
+                            </span>
+                        </div>
                     </div>
 
-                    <div class="card-body p-4">
-                        <div class="row g-4">
-                            <div class="col-md-4 border-end">
-                                <div class="section-title"><i class="bi bi-person-lines-fill me-2 text-warning"></i> Data Pribadi</div>
+                    <div class="card-body p-0">
+                        <ul class="nav nav-tabs nav-justified" id="myTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active py-3" id="profil-tab" data-bs-toggle="tab" data-bs-target="#profil-pane" type="button" role="tab"><i class="bi bi-person-vcard me-2"></i>Profil Siswa</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link py-3" id="bk-tab" data-bs-toggle="tab" data-bs-target="#bk-pane" type="button" role="tab"><i class="bi bi-journal-bookmark me-2"></i>Catatan & Prestasi</button>
+                            </li>
+                        </ul>
 
-                                <div class="mb-3">
-                                    <div class="data-label">Kelas</div>
-                                    <div class="data-value fs-4 text-primary"><?= $data['kelas'] ?></div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="data-label">NIK</div>
-                                    <div class="data-value"><?= $data['nik'] ?></div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="data-label">Jenis Kelamin</div>
-                                    <div class="data-value"><?= $gender ?></div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="data-label">Tanggal Lahir</div>
-                                    <div class="data-value"><?= $tgl_lahir_id ?></div>
+                        <div class="tab-content p-4" id="myTabContent">
+
+                            <div class="tab-pane fade show active" id="profil-pane" role="tabpanel">
+                                <div class="row g-4">
+                                    <div class="col-md-4 border-end">
+                                        <div class="section-title"><i class="bi bi-person-lines-fill me-2 text-warning"></i> Data Pribadi</div>
+                                        <div class="mb-3">
+                                            <div class="data-label">Tempat, Tgl Lahir</div>
+                                            <div class="data-value"><?= $data['tempat_lahir'] ?>, <?= $tgl_lahir_id ?></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="data-label">NIK</div>
+                                            <div class="data-value"><?= $data['nik'] ?></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="data-label">Jenis Kelamin</div>
+                                            <div class="data-value"><?= $gender ?></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4 border-end">
+                                        <div class="section-title"><i class="bi bi-geo-alt-fill me-2 text-warning"></i> Alamat Domisili</div>
+                                        <div class="mb-3">
+                                            <div class="data-label">Jalan / Dusun</div>
+                                            <div class="data-value"><?= $data['alamat_jalan'] ?></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="data-label">Desa - Kec</div>
+                                            <div class="data-value"><?= $data['desa_kelurahan'] ?> - <?= $data['kecamatan'] ?></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="data-label">Kota / Kab</div>
+                                            <div class="data-value"><?= $data['kota_kabupaten'] ?></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="section-title"><i class="bi bi-people-fill me-2 text-warning"></i> Data Orang Tua</div>
+                                        <div class="mb-3">
+                                            <div class="data-label">Nama Ayah</div>
+                                            <div class="data-value"><?= $data['nama_ayah'] ?></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="data-label">Pekerjaan Ayah</div>
+                                            <div class="data-value"><?= $data['pekerjaan_ayah'] ?></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="data-label">Nama Ibu</div>
+                                            <div class="data-value"><?= $data['nama_ibu'] ?></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="col-md-4 border-end">
-                                <div class="section-title"><i class="bi bi-geo-alt-fill me-2 text-warning"></i> Alamat Domisili</div>
+                            <div class="tab-pane fade" id="bk-pane" role="tabpanel">
+                                <div class="alert alert-info small mb-3">
+                                    <i class="bi bi-info-circle-fill me-1"></i> Data ini mencakup catatan prestasi, kedisiplinan, dan bimbingan selama menjadi siswa.
+                                </div>
 
-                                <div class="mb-3">
-                                    <div class="data-label">Jalan / Dusun</div>
-                                    <div class="data-value"><?= $data['alamat_jalan'] ?></div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="data-label">Desa / Kelurahan</div>
-                                    <div class="data-value"><?= $data['desa_kelurahan'] ?></div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="data-label">Kecamatan</div>
-                                    <div class="data-value"><?= $data['kecamatan'] ?></div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="data-label">Kota / Kabupaten</div>
-                                    <div class="data-value"><?= $data['kota_kabupaten'] ?></div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Tanggal</th>
+                                                <th>Kategori</th>
+                                                <th>Keterangan</th>
+                                                <th class="text-center">Poin</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            if ($result_bk->num_rows > 0) {
+                                                while ($bk = $result_bk->fetch_assoc()) {
+                                                    $total_poin += $bk['poin'];
+
+                                                    // Warna Badge Kategori
+                                                    $badge_bk = 'bg-secondary';
+                                                    if ($bk['kategori'] == 'Pelanggaran') $badge_bk = 'bg-danger';
+                                                    if ($bk['kategori'] == 'Prestasi') $badge_bk = 'bg-success';
+                                                    if ($bk['kategori'] == 'Masalah Pribadi') $badge_bk = 'bg-warning text-dark';
+
+                                                    echo "<tr>
+                                                    <td class='small'>" . date('d/m/Y', strtotime($bk['tanggal'])) . "</td>
+                                                    <td><span class='badge $badge_bk'>{$bk['kategori']}</span></td>
+                                                    <td>
+                                                        <strong>{$bk['judul_kasus']}</strong>
+                                                        <div class='small text-muted mt-1'>{$bk['deskripsi']}</div>
+                                                        " . (!empty($bk['tindak_lanjut']) ? "<div class='small text-primary mt-1'><i>TL: {$bk['tindak_lanjut']}</i></div>" : "") . "
+                                                    </td>
+                                                    <td class='text-center fw-bold " . ($bk['poin'] > 0 ? 'text-danger' : 'text-dark') . "'>
+                                                        " . ($bk['poin'] > 0 ? '-' . $bk['poin'] : '-') . "
+                                                    </td>
+                                                </tr>";
+                                                }
+                                            } else {
+                                                echo "<tr><td colspan='4' class='text-center py-4 text-muted'>Belum ada catatan kasus atau prestasi.</td></tr>";
+                                            }
+                                            ?>
+                                        </tbody>
+                                        <?php if ($total_poin > 0): ?>
+                                            <tfoot class="table-light">
+                                                <tr>
+                                                    <td colspan="3" class="text-end fw-bold">Total Poin Pelanggaran</td>
+                                                    <td class="text-center fw-bold text-danger">-<?= $total_poin ?></td>
+                                                </tr>
+                                            </tfoot>
+                                        <?php endif; ?>
+                                    </table>
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
-                                <div class="section-title"><i class="bi bi-people-fill me-2 text-warning"></i> Data Orang Tua</div>
-
-                                <div class="mb-3">
-                                    <div class="data-label">Nama Ayah</div>
-                                    <div class="data-value"><?= $data['nama_ayah'] ?></div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="data-label">Pekerjaan Ayah</div>
-                                    <div class="data-value"><?= $data['pekerjaan_ayah'] ?></div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="data-label">Nama Ibu</div>
-                                    <div class="data-value"><?= $data['nama_ibu'] ?></div>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
                     <div class="card-footer bg-light text-center py-3">
-                        <small class="text-muted d-block mb-2">Data ini dihasilkan oleh sistem pada <?= date('d-m-Y H:i') ?> WIB</small>
-                        <a href="cetak_kartu.php?nisn=<?= $data['nisn'] ?>" target="_blank" class="btn btn-primary btn-sm rounded-pill px-4">
-                            <i class="bi bi-printer-fill me-2"></i>Cetak Kartu NISN
-                        </a>
+                        <small class="text-muted">Data ini dihasilkan oleh sistem pada <?= date('d-m-Y H:i') ?> WIB</small>
                     </div>
                 </div>
 
@@ -284,7 +366,7 @@ $info = $conn->query("SELECT * FROM identitas_sekolah WHERE id=1")->fetch_assoc(
     </div>
 
     <div class="text-center text-muted mt-5 mb-3 small">
-        &copy; <?= date('Y') ?> <?= htmlspecialchars($info['nama_sekolah']) ?> | Developed By Aangwi
+        &copy; <?= date('Y') ?> <?= htmlspecialchars($info['nama_sekolah']) ?> | IT Division
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
