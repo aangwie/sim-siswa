@@ -1,63 +1,76 @@
-# Sistem Manajemen Data Siswa SMP (PHP Native)
+# Sistem Informasi Sekolah & Bimbingan Konseling (SIS-BK)
 
-Aplikasi berbasis web untuk pengelolaan data siswa Sekolah Menengah Pertama (SMP). Aplikasi ini dirancang dengan **PHP Native** (tanpa framework), **MySQLi**, dan antarmuka modern menggunakan **Bootstrap 5**.
-
-Aplikasi ini memiliki dua sisi antarmuka:
-1.  **Publik:** Untuk mengecek status siswa berdasarkan NISN/NIK.
-2.  **Admin:** Dashboard pengelolaan data lengkap (CRUD), Import Excel, dan Pengaturan Sekolah.
-
----
+Aplikasi manajemen data sekolah berbasis web yang komprehensif, mencakup pengelolaan data siswa (Kesiswaan) dan modul Bimbingan Konseling (BK). Dibangun menggunakan **PHP Native** dan **MySQLi** dengan antarmuka modern (**Bootstrap 5** & **DataTables**).
 
 ## 🚀 Fitur Unggulan
 
-### 🔹 Frontend (Publik)
-* **Pencarian Data Siswa:** Cek data berdasarkan NIK atau NISN.
-* **Digital Student Card:** Tampilan hasil pencarian berbentuk kartu digital yang elegan.
-* **Dynamic School Identity:** Nama sekolah, logo, dan alamat diambil dari database.
+### 🎓 Modul Kesiswaan (Admin)
+* **Manajemen Siswa Lengkap (CRUD):** Data Pribadi, Tempat/Tgl Lahir, Alamat, dan Orang Tua.
+* **Import Data Excel:** Upload massal data siswa dari file `.xlsx` dengan progress bar real-time.
+* **Export Template:** Download format Excel otomatis untuk input data.
+* **Cetak Kartu NISN:**
+    * Desain mirip kartu resmi Kemendikbud (Depan & Belakang).
+    * Support QR Code otomatis.
+    * Layout cetak otomatis (Portrait).
 
-### 🔹 Backend (Admin Dashboard)
-* **Secure Login:** Sistem login dengan password hashing (`password_verify`).
-* **Dashboard Interaktif:** Ringkasan data dengan navigasi responsif.
-* **Manajemen Siswa (CRUD):**
-    * Data terpisah (Pribadi, Alamat, Orang Tua) namun terintegrasi.
-    * **Live Search:** Pencarian data instan (AJAX) tanpa reload halaman.
-    * **Inline Edit Status:** Ubah status Aktif/Non-Aktif langsung dari tabel.
-    * **SweetAlert2:** Konfirmasi hapus data yang cantik dan aman.
-* **Import Data Excel (.xlsx):**
-    * Upload massal data siswa.
-    * **Progress Bar:** Indikator visual saat proses import berjalan.
-    * Download Template Excel otomatis.
-* **Pengaturan Sistem:**
-    * Update identitas sekolah (Nama, Slogan, Alamat, dll).
-    * Ganti password admin.
-* **Mobile Friendly:** Tampilan responsif di HP, Tablet, dan Desktop.
+### ❤️ Modul Bimbingan Konseling (Guru BK)
+* **Buku Kasus & Prestasi:**
+    * Pencatatan pelanggaran (dengan poin), prestasi, dan masalah pribadi.
+    * Jejak audit (mencatat waktu terakhir edit).
+    * Tabel interaktif dengan pencarian dan filter.
+* **Manajemen Jadwal:**
+    * Pembuatan janji temu konseling.
+    * Status jadwal (Terjadwal, Selesai, Batal).
+* **Riwayat Terintegrasi:** Melihat rekam jejak kasus siswa langsung dari profil siswa.
+
+### 🌐 Frontend (Publik / Wali Murid)
+* **Portal Cek Data:** Pencarian berdasarkan NISN atau NIK.
+* **Profil Transparan:** Menampilkan data diri siswa.
+* **Riwayat Kedisiplinan:** Wali murid dapat melihat catatan pelanggaran/prestasi siswa secara online.
+* **Download Kartu:** Tombol akses cepat untuk mencetak kartu NISN.
+
+### ⚙️ Fitur Sistem
+* **Identitas Sekolah Dinamis:** Nama sekolah, logo, alamat, dll bisa diubah dari dashboard.
+* **Keamanan:** Login Admin dengan Password Hashing (`password_verify`).
+* **UI/UX Modern:**
+    * DataTables (Pencarian, Sorting, Pagination otomatis).
+    * SweetAlert2 (Notifikasi dan Konfirmasi yang cantik).
+    * Responsive Design (Mobile Friendly).
 
 ---
 
-## 🛠️ Teknologi yang Digunakan
+## 🛠️ Teknologi
 
 * **Backend:** PHP 7.4 / 8.x (Native)
 * **Database:** MySQL / MariaDB
 * **Frontend:** HTML5, CSS3, Bootstrap 5.3
-* **Icons:** Bootstrap Icons
-* **Library:**
-    * `phpoffice/phpspreadsheet` (Untuk Import/Export Excel)
-    * `SweetAlert2` (Untuk Notifikasi Popup)
+* **Plugins:**
+    * [DataTables](https://datatables.net/) (Tabel Interaktif)
+    * [SweetAlert2](https://sweetalert2.github.io/) (Alerts)
+    * [PhpSpreadsheet](https://github.com/PHPOffice/PhpSpreadsheet) (Excel Engine)
+    * [Bootstrap Icons](https://icons.getbootstrap.com/)
 
 ---
 
-## 📦 Panduan Instalasi
+## 📦 Struktur Folder
 
-Ikuti langkah-langkah berikut untuk menjalankan proyek di komputer lokal (Localhost):
-
-### 1. Persiapan Folder
-Pastikan Anda sudah menginstall **XAMPP** atau web server sejenis.
-* Buat folder `smp_sys` di dalam `htdocs`.
-* Salin semua file proyek ke folder tersebut.
-
-### 2. Instalasi Library (Composer)
-Karena fitur Import Excel menggunakan library pihak ketiga, Anda wajib menginstall dependensi via Composer.
-Buka terminal/CMD di folder proyek, lalu jalankan:
-
-```bash
-composer require phpoffice/phpspreadsheet
+```text
+smp_sys/
+├── admin/
+│   ├── dashboard.php       # Halaman Utama
+│   ├── bk_kasus.php        # Modul Catatan Kasus (DataTables)
+│   ├── bk_jadwal.php       # Modul Jadwal Konseling
+│   ├── tambah.php          # Form Tambah Siswa
+│   ├── edit.php            # Form Edit Siswa
+│   ├── import_excel.php    # Handler Upload
+│   ├── import_handler.php  # Proses Batch Excel
+│   ├── get_detail_siswa.php# AJAX Detail Siswa
+│   ├── cari_siswa.php      # AJAX Live Search
+│   ├── pengaturan.php      # Setting Sekolah
+│   └── ... (file pendukung lainnya)
+├── uploads/                # Folder penyimpanan sementara Excel
+├── vendor/                 # Library Composer
+├── config.php              # Koneksi Database
+├── index.php               # Halaman Depan (Publik)
+├── cetak_kartu.php         # Fitur Cetak Kartu NISN
+└── README.md               # Dokumentasi
